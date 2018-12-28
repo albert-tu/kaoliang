@@ -23,6 +23,22 @@ type Event struct {
 	TopicID uint `xml:"-"`
 }
 
+// parseName - parses string to Name.
+func parseName(s string) (event.Name, error) {
+	switch s {
+	case "s3:ObjectCreated:CompleteMultipartUpload":
+		return event.ObjectCreatedCompleteMultipartUpload, nil
+	case "s3:ObjectCreated:Copy":
+		return event.ObjectCreatedCopy, nil
+	case "s3:ObjectCreated:Put":
+		return event.ObjectCreatedPut, nil
+	case "s3:ObjectRemoved:Delete":
+		return event.ObjectRemovedDelete, nil
+	default:
+		return 0, &event.ErrInvalidEventName{Name: s}
+	}
+}
+
 // MarshalXML - encodes to XML data.
 func (event *Event) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	return e.EncodeElement(event.Name.String(), start)
@@ -34,7 +50,7 @@ func (e *Event) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
 		return err
 	}
 
-	eventName, err := event.ParseName(s)
+	eventName, err := parseName(s)
 	if err != nil {
 		return err
 	}

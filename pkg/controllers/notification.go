@@ -126,7 +126,15 @@ func PutBucketNotification(c *gin.Context) {
 	c.Header("Access-Control-Allow-Origin", "*")
 	xmlConfig := models.Config{}
 	data, _ := ioutil.ReadAll(c.Request.Body)
-	xml.Unmarshal(data, &xmlConfig)
+	err := xml.Unmarshal(data, &xmlConfig)
+	if err != nil {
+		apiErr := cmd.ErrMalformedXML
+		if event.IsEventError(err) {
+			apiErr = cmd.ToAPIErrorCode(err)
+		}
+		writeErrorResponse(c, apiErr)
+		return
+	}
 	xmlConfig.Bucket = bucket
 	db := models.GetDB()
 
